@@ -1,2 +1,14 @@
 namespace RaceDay.Api.Models;
-public class Category { public int CategoryId { get; set; } public int EventId { get; set; } public string CategoryName { get; set; } = ""; public decimal DistanceKm { get; set; } public decimal EntryFee { get; set; } public int? MaximumParticipants { get; set; } public Event? Event { get; set; } public ICollection<Enrolment> Enrolments { get; set; } = new List<Enrolment>(); }
+
+public class Category
+{
+    public int CategoryId { get; set; }
+    public int EventId { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public decimal DistanceKm { get; set; }
+    public decimal EntryFee { get; set; }
+    public int? MaximumParticipants { get; set; }
+
+    public Event Event { get; set; } = null!;
+    public ICollection<Enrolment> Enrolments { get; set; } = new List<Enrolment>();
+}
