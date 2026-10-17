@@ -1,16 +1,285 @@
 using Microsoft.EntityFrameworkCore;
 using RaceDay.Api.Models;
+
 namespace RaceDay.Api.Data;
-public class RaceDayDbContext(DbContextOptions<RaceDayDbContext> options) : DbContext(options)
+
+public class RaceDayDbContext : DbContext
 {
-    public DbSet<User> Users => Set<User>(); public DbSet<Event> Events => Set<Event>(); public DbSet<EventRoute> EventRoutes => Set<EventRoute>(); public DbSet<Category> Categories => Set<Category>(); public DbSet<Enrolment> Enrolments => Set<Enrolment>(); public DbSet<Result> Results => Set<Result>();
-    protected override void OnModelCreating(ModelBuilder b)
+    public RaceDayDbContext(DbContextOptions<RaceDayDbContext> options) : base(options)
     {
-        b.Entity<User>(e => { e.ToTable("Users"); e.HasKey(x=>x.UserId); e.Property(x=>x.FirstName).HasMaxLength(50).IsRequired(); e.Property(x=>x.LastName).HasMaxLength(50).IsRequired(); e.Property(x=>x.Email).HasMaxLength(255).IsRequired(); e.HasIndex(x=>x.Email).IsUnique(); e.Property(x=>x.PasswordHash).HasMaxLength(255).IsRequired(); e.Property(x=>x.Role).HasMaxLength(20).IsRequired(); e.Property(x=>x.PhoneNumber).HasMaxLength(30); e.Property(x=>x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()"); e.HasCheckConstraint("CK_Users_Role", "[Role] IN ('Organiser','Participant')"); });
-        b.Entity<Event>(e => { e.ToTable("Events"); e.HasKey(x=>x.EventId); e.Property(x=>x.EventName).HasMaxLength(150).IsRequired(); e.Property(x=>x.Description).HasMaxLength(1000); e.Property(x=>x.Venue).HasMaxLength(200).IsRequired(); e.Property(x=>x.City).HasMaxLength(100).IsRequired(); e.Property(x=>x.Province).HasMaxLength(100).IsRequired(); e.Property(x=>x.EventType).HasMaxLength(30).IsRequired(); e.Property(x=>x.Status).HasMaxLength(20).HasDefaultValue("Upcoming").IsRequired(); e.Property(x=>x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()"); e.HasOne(x=>x.Organiser).WithMany(x=>x.Events).HasForeignKey(x=>x.OrganiserId).OnDelete(DeleteBehavior.Restrict); e.HasCheckConstraint("CK_Events_EventType", "[EventType] IN ('Running','Walking','Cycling')"); e.HasCheckConstraint("CK_Events_Status", "[Status] IN ('Draft','Upcoming','Completed','Cancelled')"); });
-        b.Entity<EventRoute>(e => { e.ToTable("EventRoutes"); e.HasKey(x=>x.RouteId); e.Property(x=>x.RouteName).HasMaxLength(150).IsRequired(); e.Property(x=>x.StartLocation).HasMaxLength(200).IsRequired(); e.Property(x=>x.FinishLocation).HasMaxLength(200).IsRequired(); e.Property(x=>x.RouteDistanceKm).HasPrecision(6,2).IsRequired(); e.Property(x=>x.RouteDescription).HasMaxLength(1000); e.HasIndex(x=>new{x.EventId,x.RouteName}).IsUnique(); e.HasOne(x=>x.Event).WithMany(x=>x.Routes).HasForeignKey(x=>x.EventId).OnDelete(DeleteBehavior.Cascade); e.HasCheckConstraint("CK_EventRoutes_Distance", "[RouteDistanceKm] > 0"); });
-        b.Entity<Category>(e => { e.ToTable("Categories"); e.HasKey(x=>x.CategoryId); e.Property(x=>x.CategoryName).HasMaxLength(100).IsRequired(); e.Property(x=>x.DistanceKm).HasPrecision(6,2); e.Property(x=>x.EntryFee).HasPrecision(10,2); e.HasIndex(x=>new{x.EventId,x.CategoryName}).IsUnique(); e.HasOne(x=>x.Event).WithMany(x=>x.Categories).HasForeignKey(x=>x.EventId).OnDelete(DeleteBehavior.Cascade); e.HasCheckConstraint("CK_Categories_Distance", "[DistanceKm] > 0"); e.HasCheckConstraint("CK_Categories_EntryFee", "[EntryFee] >= 0"); e.HasCheckConstraint("CK_Categories_MaxParticipants", "[MaximumParticipants] IS NULL OR [MaximumParticipants] > 0"); });
-        b.Entity<Enrolment>(e => { e.ToTable("Enrolments"); e.HasKey(x=>x.EnrolmentId); e.Property(x=>x.EmergencyContactName).HasMaxLength(100); e.Property(x=>x.EmergencyContactPhone).HasMaxLength(30); e.Property(x=>x.PaymentStatus).HasMaxLength(20).HasDefaultValue("Pending"); e.Property(x=>x.EnrolmentStatus).HasMaxLength(20).HasDefaultValue("Active"); e.Property(x=>x.EnrolmentDate).HasDefaultValueSql("SYSUTCDATETIME()"); e.HasIndex(x=>new{x.ParticipantId,x.CategoryId}).IsUnique(); e.HasOne(x=>x.Participant).WithMany(x=>x.Enrolments).HasForeignKey(x=>x.ParticipantId).OnDelete(DeleteBehavior.Restrict); e.HasOne(x=>x.Category).WithMany(x=>x.Enrolments).HasForeignKey(x=>x.CategoryId).OnDelete(DeleteBehavior.Restrict); e.HasOne(x=>x.Result).WithOne(x=>x.Enrolment).HasForeignKey<Result>(x=>x.EnrolmentId).OnDelete(DeleteBehavior.Cascade); });
-        b.Entity<Result>(e => { e.ToTable("Results"); e.HasKey(x=>x.ResultId); e.Property(x=>x.ResultStatus).HasMaxLength(20).HasDefaultValue("Finished"); e.Property(x=>x.RecordedAt).HasDefaultValueSql("SYSUTCDATETIME()"); e.HasIndex(x=>x.EnrolmentId).IsUnique(); e.HasCheckConstraint("CK_Results_Position", "[FinishPosition] IS NULL OR [FinishPosition] > 0"); e.HasCheckConstraint("CK_Results_Time", "[FinishTimeSeconds] IS NULL OR [FinishTimeSeconds] > 0"); e.HasCheckConstraint("CK_Results_Status", "[ResultStatus] IN ('Finished','DNF','DNS','Disqualified')"); });
+    }
+
+    public DbSet<User> Users => Set<User>();
+    public DbSet<Event> Events => Set<Event>();
+    public DbSet<EventRoute> EventRoutes => Set<EventRoute>();
+    public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Enrolment> Enrolments => Set<Enrolment>();
+    public DbSet<Result> Results => Set<Result>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("Users");
+
+            entity.HasKey(x => x.UserId);
+
+            entity.Property(x => x.FirstName)
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(x => x.LastName)
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(x => x.Email)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.HasIndex(x => x.Email)
+                .IsUnique();
+
+            entity.Property(x => x.PasswordHash)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(x => x.Role)
+                .HasMaxLength(20)
+                .IsRequired();
+
+            entity.Property(x => x.PhoneNumber)
+                .HasMaxLength(30);
+
+            entity.Property(x => x.CreatedAt)
+                .HasDefaultValueSql("SYSUTCDATETIME()")
+                .IsRequired();
+
+            entity.HasMany(x => x.EventsCreated)
+                .WithOne(x => x.Organiser)
+                .HasForeignKey(x => x.OrganiserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(x => x.Enrolments)
+                .WithOne(x => x.Participant)
+                .HasForeignKey(x => x.ParticipantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Event>(entity =>
+        {
+            entity.ToTable("Events");
+
+            entity.HasKey(x => x.EventId);
+
+            entity.Property(x => x.OrganiserId)
+                .IsRequired();
+
+            entity.Property(x => x.EventName)
+                .HasMaxLength(150)
+                .IsRequired();
+
+            entity.Property(x => x.Description)
+                .HasMaxLength(1000);
+
+            entity.Property(x => x.EventDate)
+                .IsRequired();
+
+            entity.Property(x => x.Venue)
+                .HasMaxLength(200)
+                .IsRequired();
+
+            entity.Property(x => x.City)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(x => x.Province)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(x => x.EventType)
+                .HasMaxLength(30)
+                .IsRequired();
+
+            entity.Property(x => x.Status)
+                .HasMaxLength(20)
+                .HasDefaultValue("Upcoming")
+                .IsRequired();
+
+            entity.Property(x => x.CreatedAt)
+                .HasDefaultValueSql("SYSUTCDATETIME()")
+                .IsRequired();
+
+            entity.HasOne(x => x.Organiser)
+                .WithMany(x => x.EventsCreated)
+                .HasForeignKey(x => x.OrganiserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(x => x.Categories)
+                .WithOne(x => x.Event)
+                .HasForeignKey(x => x.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(x => x.Routes)
+                .WithOne(x => x.Event)
+                .HasForeignKey(x => x.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<EventRoute>(entity =>
+        {
+            entity.ToTable("EventRoutes");
+
+            entity.HasKey(x => x.RouteId);
+
+            entity.Property(x => x.RouteName)
+                .HasMaxLength(150)
+                .IsRequired();
+
+            entity.Property(x => x.StartLocation)
+                .HasMaxLength(200)
+                .IsRequired();
+
+            entity.Property(x => x.FinishLocation)
+                .HasMaxLength(200)
+                .IsRequired();
+
+            entity.Property(x => x.RouteDistanceKm)
+                .HasPrecision(6, 2)
+                .IsRequired();
+
+            entity.Property(x => x.RouteDescription)
+                .HasMaxLength(1000);
+
+            entity.HasIndex(x => new { x.EventId, x.RouteName })
+                .IsUnique();
+
+            entity.HasOne(x => x.Event)
+                .WithMany(x => x.Routes)
+                .HasForeignKey(x => x.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.ToTable("Categories");
+
+            entity.HasKey(x => x.CategoryId);
+
+            entity.Property(x => x.EventId)
+                .IsRequired();
+
+            entity.Property(x => x.CategoryName)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(x => x.DistanceKm)
+                .HasPrecision(6, 2)
+                .IsRequired();
+
+            entity.Property(x => x.EntryFee)
+                .HasPrecision(10, 2)
+                .IsRequired();
+
+            entity.Property(x => x.MaximumParticipants);
+
+            entity.HasIndex(x => new { x.EventId, x.CategoryName })
+                .IsUnique();
+
+            entity.HasOne(x => x.Event)
+                .WithMany(x => x.Categories)
+                .HasForeignKey(x => x.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(x => x.Enrolments)
+                .WithOne(x => x.Category)
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Enrolment>(entity =>
+        {
+            entity.ToTable("Enrolments");
+
+            entity.HasKey(x => x.EnrolmentId);
+
+            entity.Property(x => x.ParticipantId)
+                .IsRequired();
+
+            entity.Property(x => x.CategoryId)
+                .IsRequired();
+
+            entity.Property(x => x.EnrolmentDate)
+                .HasDefaultValueSql("SYSUTCDATETIME()")
+                .IsRequired();
+
+            entity.Property(x => x.EmergencyContactName)
+                .HasMaxLength(100);
+
+            entity.Property(x => x.EmergencyContactPhone)
+                .HasMaxLength(30);
+
+            entity.Property(x => x.PaymentStatus)
+                .HasMaxLength(20)
+                .HasDefaultValue("Pending")
+                .IsRequired();
+
+            entity.Property(x => x.EnrolmentStatus)
+                .HasMaxLength(20)
+                .HasDefaultValue("Active")
+                .IsRequired();
+
+            entity.HasIndex(x => new { x.ParticipantId, x.CategoryId })
+                .IsUnique();
+
+            entity.HasOne(x => x.Participant)
+                .WithMany(x => x.Enrolments)
+                .HasForeignKey(x => x.ParticipantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.Category)
+                .WithMany(x => x.Enrolments)
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.Result)
+                .WithOne(x => x.Enrolment)
+                .HasForeignKey(x => x.Result)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Result>(entity =>
+        {
+            entity.ToTable("Results");
+
+            entity.HasKey(x => x.ResultId);
+
+            entity.Property(x => x.EnrolmentId)
+                .IsRequired();
+
+            entity.Property(x => x.ResultStatus)
+                .HasMaxLength(20)
+                .HasDefaultValue("Finished")
+                .IsRequired();
+
+            entity.Property(x => x.RecordedAt)
+                .HasDefaultValueSql("SYSUTCDATETIME()")
+                .IsRequired();
+
+            entity.Property(x => x.FinishPosition)
+                .IsRequired(false);
+
+            entity.Property(x => x.FinishTimeSeconds)
+                .IsRequired(false);
+
+            entity.HasIndex(x => x.EnrolmentId)
+                .IsUnique();
+
+            entity.HasOne(x => x.Enrolment)
+                .WithOne(x => x.Result)
+                .HasForeignKey(x => x.EnrolmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
