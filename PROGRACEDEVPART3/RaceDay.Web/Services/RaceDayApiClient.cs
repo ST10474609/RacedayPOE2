@@ -1,42 +1,36 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using RaceDay.Web.Models;
 
 namespace RaceDay.Web.Services;
 
-public sealed class RaceDayApiClient
+public sealed class RaceDayApiClient(IHttpClientFactory clients, IHttpContextAccessor context)
 {
-    private readonly IHttpClientFactory _clients;
-    private readonly IHttpContextAccessor _context;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-
-    public RaceDayApiClient(IHttpClientFactory clients, IHttpContextAccessor context)
-    {
-        _clients = clients;
-        _context = context;
-    }
 
     public async Task<(UserResponse? User, string? Error)> LoginAsync(LoginRequest model)
     {
-        using var response = await _clients.CreateClient("RaceDayApi").PostAsJsonAsync("api/auth/login", model);
-        if (!response.IsSuccessStatusCode)
-            return (null, await ReadErrorAsync(response));
-        SaveApiCookie(response);
+        using var response = await clients.CreateClient("RaceDayApi").PostAsJsonAsync("api/auth/login", model);
+        if (!response.IsSuccessStatusCode) return (null, await ReadErrorAsync(response));
+        if (response.Headers.TryGetValues("Set-Cookie", out var values))
+        {
+            var cookie = values.FirstOrDefault(x => x.StartsWith("RaceDay.Auth=", StringComparison.OrdinalIgnoreCase));
+            if (cookie is not null) context.HttpContext?.Session.SetString("ApiCookie", cookie.Split(';', 2)[0]);
+        }
         return (await response.Content.ReadFromJsonAsync<UserResponse>(JsonOptions), null);
     }
 
     public async Task<(bool Success, string? Error)> RegisterAsync(RegisterRequest model)
     {
-        using var response = await _clients.CreateClient("RaceDayApi").PostAsJsonAsync("api/auth/register", model);
+        using var response = await clients.CreateClient("RaceDayApi").PostAsJsonAsync("api/auth/register", model);
         return (response.IsSuccessStatusCode, response.IsSuccessStatusCode ? null : await ReadErrorAsync(response));
     }
 
     public async Task LogoutAsync()
     {
         try { using var response = await SendAsync(HttpMethod.Post, "api/auth/logout"); }
-        finally { _context.HttpContext?.Session.Clear(); }
+        finally { context.HttpContext?.Session.Clear(); }
     }
 
     public Task<List<EventResponse>?> GetEventsAsync() => GetAsync<List<EventResponse>>("api/events");
@@ -64,23 +58,15 @@ public sealed class RaceDayApiClient
         return await response.Content.ReadFromJsonAsync<T>(JsonOptions);
     }
 
-    private async Task<HttpResponseMessage> SendAsync<T>(HttpMethod method, string path, T? body = default)
+    private Task<HttpResponseMessage> SendAsync(HttpMethod method, string path) => SendAsync<object?>(method, path, null);
+
+    private async Task<HttpResponseMessage> SendAsync<T>(HttpMethod method, string path, T? body)
     {
         var request = new HttpRequestMessage(method, path);
-        var cookie = _context.HttpContext?.Session.GetString("ApiCookie");
+        var cookie = context.HttpContext?.Session.GetString("ApiCookie");
         if (!string.IsNullOrWhiteSpace(cookie)) request.Headers.TryAddWithoutValidation("Cookie", cookie);
         if (body is not null) request.Content = JsonContent.Create(body);
-        return await _clients.CreateClient("RaceDayApi").SendAsync(request);
-    }
-
-    private void SaveApiCookie(HttpResponseMessage response)
-    {
-        if (response.Headers.TryGetValues("Set-Cookie", out var values))
-        {
-            var authCookie = values.FirstOrDefault(x => x.StartsWith("RaceDay.Auth=", StringComparison.OrdinalIgnoreCase));
-            if (authCookie is not null)
-                _context.HttpContext?.Session.SetString("ApiCookie", authCookie.Split(';', 2)[0]);
-        }
+        return await clients.CreateClient("RaceDayApi").SendAsync(request);
     }
 
     private static async Task<string> ReadErrorAsync(HttpResponseMessage response)
