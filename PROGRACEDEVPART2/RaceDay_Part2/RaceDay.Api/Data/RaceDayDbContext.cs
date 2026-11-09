@@ -245,7 +245,7 @@ public class RaceDayDbContext : DbContext
 
             entity.HasOne(x => x.Result)
                 .WithOne(x => x.Enrolment)
-                .HasForeignKey(x => x.Result)
+                .HasForeignKey<Result>(x => x.EnrolmentId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -278,7 +278,7 @@ public class RaceDayDbContext : DbContext
 
             entity.HasOne(x => x.Enrolment)
                 .WithOne(x => x.Result)
-                .HasForeignKey(x => x.EnrolmentId)
+                .HasForeignKey<Result>(x => x.EnrolmentId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

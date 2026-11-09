@@ -1,0 +1,2 @@
+@model List<RaceResult>
+<h1>My race results</h1><table class="table"><tr><th>Event</th><th>Event date</th><th>Category</th><th>Position</th><th>Finish time</th><th>Status</th></tr>@foreach(var r in Model){<tr><td>@r.EventName</td><td>@(r.EventDate?.ToString("dd MMM yyyy")??"—")</td><td>@r.CategoryName</td><td>@r.FinishPosition</td><td>@(r.FinishTimeSeconds.HasValue?TimeSpan.FromSeconds(r.FinishTimeSeconds.Value).ToString(@"hh\:mm\:ss"):"—")</td><td>@r.ResultStatus</td></tr>}</table>

@@ -84,7 +84,7 @@ public class EnrolmentsController : ControllerBase
         _db.Enrolments.Add(enrolment);
         await _db.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetMyEnrolments), new { }, enrolment);
+        return Created("/api/enrolments/me", new EnrolmentResponse(enrolment.EnrolmentId, enrolment.ParticipantId, enrolment.CategoryId, category.CategoryName, category.EventId, category.Event.EventName, enrolment.EnrolmentDate, enrolment.EmergencyContactName, enrolment.EmergencyContactPhone, enrolment.PaymentStatus, enrolment.EnrolmentStatus));
     }
 
     [HttpDelete("{id:int}")]
