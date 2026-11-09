@@ -21,3 +21,5 @@ jobs:
         run: dotnet test PROGRACEDEVPART2/RaceDay_Part2/RaceDay.sln --configuration Release --no-build
       - name: Build MVC frontend
         run: dotnet build PROGRACEDEVPART2/RaceDay_Part3/RaceDay.Mvc/RaceDay.Mvc.csproj --configuration Release
+      - name: Build Docker image
+        run: docker build -t raceday-mvc -f PROGRACEDEVPART2/RaceDay_Part3/Dockerfile PROGRACEDEVPART2/RaceDay_Part3

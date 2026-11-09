@@ -41,7 +41,9 @@ public class ResultsController : ControllerBase
                 x.FinishPosition,
                 x.FinishTimeSeconds,
                 x.ResultStatus,
-                x.RecordedAt))
+                x.RecordedAt,
+                x.Enrolment.Category.CategoryName,
+                x.Enrolment.Category.Event.EventDate))
             .ToListAsync();
 
         return Ok(results);
@@ -142,7 +144,9 @@ public class ResultsController : ControllerBase
             result.FinishPosition,
             result.FinishTimeSeconds,
             result.ResultStatus,
-            result.RecordedAt));
+            result.RecordedAt,
+            enrolment.Category.CategoryName,
+            eventEntity.EventDate));
     }
 
     [Authorize(Roles = "Organiser")]
@@ -190,7 +194,9 @@ public class ResultsController : ControllerBase
             result.FinishPosition,
             result.FinishTimeSeconds,
             result.ResultStatus,
-            result.RecordedAt));
+            result.RecordedAt,
+            result.Enrolment.Category.CategoryName,
+            result.Enrolment.Category.Event.EventDate));
     }
 
     [Authorize(Roles = "Organiser")]

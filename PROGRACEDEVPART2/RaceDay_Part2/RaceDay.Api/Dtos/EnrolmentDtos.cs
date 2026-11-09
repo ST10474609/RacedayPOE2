@@ -36,4 +36,6 @@ public record ResultResponse(
     int? FinishPosition,
     int? FinishTimeSeconds,
     string ResultStatus,
-    DateTime RecordedAt);
+    DateTime RecordedAt,
+    string? CategoryName = null,
+    DateTime? EventDate = null);
