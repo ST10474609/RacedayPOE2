@@ -1,0 +1,18 @@
+name: RaceDay build
+on:
+  push:
+    branches: [ main, feature/prog6212-part3-mvc ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore and build Part 2 API
+        run: dotnet build PROGRACEDEVPART2/RaceDay_Part2/RaceDay.Api/RaceDay.Api.csproj --configuration Release
+      - name: Restore and build Part 3 MVC
+        run: dotnet build PROGRACEDEVPART3/RaceDay.Web/RaceDay.Web.csproj --configuration Release
