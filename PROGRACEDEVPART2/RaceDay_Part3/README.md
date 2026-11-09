@@ -13,8 +13,8 @@ This project adds the ASP.NET Core MVC frontend to the existing Part 2 API. MVC 
 Start SQL Server and the Part 2 API first. Set `Api:BaseUrl` in `RaceDay.Mvc/appsettings.json` to the API HTTP address (default `http://localhost:5080/`). Then run `dotnet run --project RaceDay.Mvc` from this folder.
 
 ## Docker
-Build: `docker build -t raced ay-mvc .`
-Run: `docker run --rm -p 8080:8080 -e Api__BaseUrl=http://host.docker.internal:5080/ raced ay-mvc`
+Build: `docker build -t raceday-mvc .`
+Run: `docker run --rm -p 8080:8080 -e Api__BaseUrl=http://host.docker.internal:5080/ raceday-mvc`
 The API must be reachable from the container. On Linux add `--add-host=host.docker.internal:host-gateway`.
 
 ## Azure Blob Storage — outstanding API work

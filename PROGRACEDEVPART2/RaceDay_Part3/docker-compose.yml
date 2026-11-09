@@ -1,5 +1,5 @@
 services:
-  raced ay-mvc:
+  raceday-mvc:
     build: .
     ports:
       - "8080:8080"
