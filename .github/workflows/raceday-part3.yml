@@ -1,5 +1,6 @@
 name: RaceDay Part 3 CI
 on:
+  workflow_dispatch:
   push:
     branches: [main, part3-mvc-azure-docker]
   pull_request:
