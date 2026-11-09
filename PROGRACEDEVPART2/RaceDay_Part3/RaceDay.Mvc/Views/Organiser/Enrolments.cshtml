@@ -1,0 +1,2 @@
+@model List<Enrolment>
+<h1>Enrolments · @ViewBag.Event?.EventName</h1><table class="table"><tr><th>Participant</th><th>Category</th><th>Date</th><th>Status</th></tr>@foreach(var e in Model){<tr><td>@e.ParticipantId</td><td>@e.CategoryName</td><td>@e.EnrolmentDate.ToString("dd MMM yyyy")</td><td><span class="badge bg-success">@e.EnrolmentStatus</span></td></tr>}</table>

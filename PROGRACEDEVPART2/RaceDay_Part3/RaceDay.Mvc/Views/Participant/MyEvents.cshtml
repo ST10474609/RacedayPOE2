@@ -1,0 +1,2 @@
+@model List<Enrolment>
+<h1>My events</h1>@foreach(var e in Model){<div class="card p-3 mb-2"><h3>@e.EventName</h3><p>@e.CategoryName · @e.EnrolmentDate.ToString("dd MMM yyyy")</p><span class="badge bg-success">@e.EnrolmentStatus</span></div>}

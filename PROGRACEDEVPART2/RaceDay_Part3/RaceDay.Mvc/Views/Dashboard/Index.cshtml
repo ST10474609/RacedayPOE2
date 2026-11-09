@@ -1,0 +1,2 @@
+@model List<RaceEvent>
+<h1>Organiser dashboard</h1><div class="row g-3 mb-4"><div class="col-md-3"><div class="card p-3"><small>YOUR EVENTS</small><strong class="display-5">@Model.Count</strong></div></div><div class="col-md-3"><div class="card p-3"><small>UPCOMING</small><strong class="display-5">@ViewBag.Upcoming</strong></div></div></div><a class="btn btn-success" asp-controller="Organiser" asp-action="Create">Create event</a><a class="btn btn-outline-dark" asp-controller="Organiser" asp-action="Events">Manage events</a>
