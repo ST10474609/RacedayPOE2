@@ -79,7 +79,9 @@ public class ResultsController : ControllerBase
                 x.FinishPosition,
                 x.FinishTimeSeconds,
                 x.ResultStatus,
-                x.RecordedAt))
+                x.RecordedAt,
+                x.Enrolment.Category.CategoryName,
+                x.Enrolment.Category.Event.EventDate))
             .ToListAsync();
 
         return Ok(results);
