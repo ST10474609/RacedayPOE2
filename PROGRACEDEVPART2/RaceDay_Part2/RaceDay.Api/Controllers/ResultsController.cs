@@ -34,7 +34,7 @@ public class ResultsController : ControllerBase
             .Select(x => new ResultResponse(
                 x.ResultId,
                 x.EnrolmentId,
-                x.ParticipantId,
+                x.Enrolment.ParticipantId,
                 $"{x.Enrolment.Participant.FirstName} {x.Enrolment.Participant.LastName}",
                 x.Enrolment.Category.EventId,
                 x.Enrolment.Category.Event.EventName,
