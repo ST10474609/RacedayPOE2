@@ -10,7 +10,7 @@ The ASP.NET Core MVC frontend consumes the Part 2 API for all data. It contains 
 
 ## Docker
 `docker build -t raceday-mvc .`
-`docker run --rm -p 8080:8080 -e Api__BaseUrl=http://host.docker.internal:5080/ raceday-mvc`
+`docker run --rm -p 8080:8080 -e Api__BaseUrl=http://host.docker.internal:5200/ raceday-mvc`
 On Linux, add `--add-host=host.docker.internal:host-gateway`. API and SQL Server must be reachable from the container.
 
 ## Azure Blob Storage
