@@ -1,0 +1,22 @@
+name: RaceDay Part 3 CI
+on:
+  push:
+    branches: [main, part3-mvc-azure-docker]
+  pull_request:
+    branches: [main]
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore API solution
+        run: dotnet restore PROGRACEDEVPART2/RaceDay_Part2/RaceDay.sln
+      - name: Build API and tests
+        run: dotnet build PROGRACEDEVPART2/RaceDay_Part2/RaceDay.sln --configuration Release
+      - name: Run API tests
+        run: dotnet test PROGRACEDEVPART2/RaceDay_Part2/RaceDay.sln --configuration Release --no-build
+      - name: Build MVC frontend
+        run: dotnet build PROGRACEDEVPART2/RaceDay_Part3/RaceDay.Mvc/RaceDay.Mvc.csproj --configuration Release
