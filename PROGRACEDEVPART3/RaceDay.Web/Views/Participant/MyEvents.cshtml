@@ -1,0 +1,3 @@
+@model IEnumerable<EnrolmentResponse>
+@{ViewData["Title"]="My entries";}
+<h1 class="h2 fw-bold mb-4">My event entries</h1><div class="card"><div class="card-body"><div class="table-responsive"><table class="table"><thead><tr><th>Event</th><th>Category</th><th>Entered</th><th>Payment</th><th>Status</th></tr></thead><tbody>@foreach(var e in Model){<tr><td>@e.EventName</td><td>@e.CategoryName</td><td>@e.EnrolmentDate.ToString("dd MMM yyyy")</td><td>@e.PaymentStatus</td><td>@e.EnrolmentStatus</td></tr>}</tbody></table></div>@if(!Model.Any()){<p class="text-secondary mb-0">You have not entered an event yet.</p>}</div></div>
