@@ -31,7 +31,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Type = SecuritySchemeType.ApiKey,
         In = ParameterLocation.Cookie,
-        Name = ".AspNetCore.Cookies",
+        Name = "RaceDay.Auth",
         Description = "Use the authentication cookie issued after login."
     });
 });
