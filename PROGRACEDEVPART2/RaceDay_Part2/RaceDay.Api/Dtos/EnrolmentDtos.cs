@@ -21,6 +21,7 @@ public record EnrolmentResponse(
     string EnrolmentStatus);
 
 public record ResultRequest(
+    [Required] int EnrolmentId,
     int? FinishPosition,
     int? FinishTimeSeconds,
     string ResultStatus);

@@ -248,7 +248,14 @@ public class EventsController : ControllerBase
         _db.EventRoutes.Add(route);
         await _db.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetRoutes), new { eventId }, route);
+        return CreatedAtAction(nameof(GetRoutes), new { eventId }, new RouteResponse(
+            route.RouteId,
+            route.EventId,
+            route.RouteName,
+            route.StartLocation,
+            route.FinishLocation,
+            route.RouteDistanceKm,
+            route.RouteDescription));
     }
 
     private static string? Validate(EventRequest request)

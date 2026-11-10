@@ -25,6 +25,11 @@ public record EventResponse(
     string Status,
     DateTime CreatedAt);
 
+public record EventDetailsResponse(
+    EventResponse Event,
+    IReadOnlyList<CategoryResponse> Categories,
+    IReadOnlyList<RouteResponse> Routes);
+
 public record RouteRequest(
     [Required, MinLength(2), MaxLength(150)] string RouteName,
     [Required, MaxLength(200)] string StartLocation,
